@@ -3,6 +3,15 @@ Build:
 
 bitbake displaysettings
 
+or locally (my example)
+
+cd displaysettings 
+mkdir build
+cd build
+cmake -DBUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=/home/mark/rdk/wpe/install ..
+make
+make install
+
 -----------------
 Install:
 
@@ -21,4 +30,4 @@ systemctl restart wpeframework
 -----------------
 Test:
 
-curl --header "Content-Type: application/json"   --request POST   --data '{"jsonrpc":"2.0","id":"3","method": "DisplaySettings.1.time"}'   http://10.0.0.247:80/jsonrpc
+curl --header "Content-Type: application/json" --request POST --data '{"jsonrpc":"2.0","id":"3","method": "DisplaySettings.1.getConnectedVideoDisplays"}' http://127.0.0.1:3331/jsonrpc
