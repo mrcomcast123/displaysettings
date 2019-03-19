@@ -2,6 +2,11 @@
 
 #include "Module.h"
 
+#ifdef DS_FOUND
+#include "libIBus.h"
+#include "irMgr.h"
+#endif
+
 namespace WPEFramework {
 
     namespace Plugin {
@@ -178,6 +183,14 @@ namespace WPEFramework {
             virtual const string Initialize(PluginHost::IShell* service) override;
             virtual void Deinitialize(PluginHost::IShell* service) override;
             virtual string Information() const override;
+        private:
+#ifdef DS_FOUND
+            void InitializeIARM();
+            void DeinitializeIARM();
+		    static IARM_Result_t ResolutionPreChange(void *arg);
+		    static IARM_Result_t ResolutionPostChange(void *arg);
+            static void DisplResolutionHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
+#endif
         };
 	} // namespace Plugin
 } // namespace WPEFramework
