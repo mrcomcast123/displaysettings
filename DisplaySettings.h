@@ -1,11 +1,8 @@
 #pragma once
 
 #include "Module.h"
-
-#ifdef DS_FOUND
 #include "libIBus.h"
 #include "irMgr.h"
-#endif
 
 namespace WPEFramework {
 
@@ -142,14 +139,12 @@ namespace WPEFramework {
             virtual void Deinitialize(PluginHost::IShell* service) override;
             virtual string Information() const override;
         private:
-#ifdef DS_FOUND
             void InitializeIARM();
             void DeinitializeIARM();
 		    static IARM_Result_t ResolutionPreChange(void *arg);
 		    static IARM_Result_t ResolutionPostChange(void *arg);
             static void DisplResolutionHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
             static void dsHdmiEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
-#endif
             //TODO/FIXME -- these are carried over from ServiceManager DisplaySettings - we need to munge this around to support the Thunder plugin version number
             int getApiVersionNumber();
             void setApiVersionNumber(unsigned int apiVersionNumber);
