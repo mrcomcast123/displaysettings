@@ -4,7 +4,6 @@
 #define MYLOG(...) fprintf(logger, __VA_ARGS__); fflush(logger);
 #define MYTRACE() fprintf(logger, "%s\n", __PRETTY_FUNCTION__); fflush(logger);
 
-#ifdef DS_FOUND
 #include "dsMgr.h"
 #include "libIBusDaemon.h"
 #include "host.hpp"
@@ -97,7 +96,6 @@ namespace
         return name;
     }
 }
-#endif
 
 namespace WPEFramework {
 
@@ -160,25 +158,20 @@ namespace WPEFramework {
 		const string DisplaySettings::Initialize(PluginHost::IShell* /* service */)
 		{
             MYTRACE();
-#ifdef DS_FOUND
             InitializeIARM();
-#endif		
 			// On success return empty, to indicate there is no error text.
 			return (string());
 		}
 		void DisplaySettings::Deinitialize(PluginHost::IShell* /* service */)
 		{
             MYTRACE();
-#ifdef DS_FOUND
             DeinitializeIARM();
-#endif		
 		}
 		string DisplaySettings::Information() const
 		{
 			// No additional info to report.
 			return (string());
 		}
-#ifdef DS_FOUND
         void DisplaySettings::InitializeIARM()
         {
             MYTRACE();
@@ -350,7 +343,7 @@ namespace WPEFramework {
                 break;
             }
         }        
-#endif
+
         #define CONTAINS(v,s) (find(begin(v), end(v), s) != end(v))
         #define STRING_CONTAINS(s1,s2) \
             (search(s1.begin(), s1.end(), s2.begin(), s2.end(), \
