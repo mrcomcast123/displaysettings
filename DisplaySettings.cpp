@@ -1,6 +1,8 @@
 #include "DisplaySettings.h"
 #include <algorithm>
-#define MYLOG(...) fprintf(logger, __VA_ARGS__); fflush(logger);        
+
+#define MYLOG(...) fprintf(logger, __VA_ARGS__); fflush(logger);
+#define MYTRACE() fprintf(logger, "%s\n", __PRETTY_FUNCTION__); fflush(logger);
 
 #ifdef DS_FOUND
 #include "dsMgr.h"
@@ -38,6 +40,8 @@
 //Mark Rollins
 //I have put several //TODO/FIXME comments throughout that show areas that were a concern when transfering code from the ServiceManager's DisplaySettings to this Thunder plugin here.
 //One area where I didn't complete cover fixme was in serval of the function that previously had a try/catch around device settings calls.  We need to figure out how to handle these cases.
+
+#define HDMI_HOT_PLUG_EVENT_CONNECTED 0
 
 #ifdef USE_IARM //TODO/FIXME - when would this be enabled ???
 namespace
@@ -113,7 +117,7 @@ namespace WPEFramework {
     		printf("DisplaySettings logger=%p\n", logger);
     		fflush(stdout);
     		
-            MYLOG("DisplaySettings CTOR!\n");
+            MYTRACE();
             DisplaySettings::_instance = this;
    			Register<Params, JStringArray >(_T("getQuirks"), &DisplaySettings::getQuirks, this);
 			Register<Params, JStringArray >(_T("getConnectedVideoDisplays"), &DisplaySettings::getConnectedVideoDisplays, this);
@@ -134,7 +138,7 @@ namespace WPEFramework {
 		}
 		DisplaySettings::~DisplaySettings()
 		{
-            MYLOG("DisplaySettings DTOR!\n");
+            MYTRACE();
             DisplaySettings::_instance = nullptr;
 			Unregister(_T("getQuirks"));            
 			Unregister(_T("getConnectedVideoDisplays"));
@@ -155,6 +159,7 @@ namespace WPEFramework {
 		}
 		const string DisplaySettings::Initialize(PluginHost::IShell* /* service */)
 		{
+            MYTRACE();
 #ifdef DS_FOUND
             InitializeIARM();
 #endif		
@@ -163,6 +168,7 @@ namespace WPEFramework {
 		}
 		void DisplaySettings::Deinitialize(PluginHost::IShell* /* service */)
 		{
+            MYTRACE();
 #ifdef DS_FOUND
             DeinitializeIARM();
 #endif		
@@ -175,7 +181,7 @@ namespace WPEFramework {
 #ifdef DS_FOUND
         void DisplaySettings::InitializeIARM()
         {
-		    MYLOG("%s\n", __PRETTY_FUNCTION__);        
+            MYTRACE();
             IARM_Result_t res;
             IARM_CHECK( IARM_Bus_Init("Display_Settings") );
             IARM_CHECK( IARM_Bus_Connect() );
@@ -200,7 +206,7 @@ namespace WPEFramework {
         //TODO/FIXME - we need to install crash handler to ensure DeinitializeIARM gets called
         void DisplaySettings::DeinitializeIARM()
         {
-		    MYLOG("%s\n", __PRETTY_FUNCTION__);        
+            MYTRACE();
             IARM_Result_t res;        
             IARM_CHECK( IARM_Bus_UnRegisterEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_RX_SENSE) );
             IARM_CHECK( IARM_Bus_UnRegisterEventHandler(IARM_BUS_DSMGR_NAME, IARM_BUS_DSMGR_EVENT_ZOOM_SETTINGS) );
@@ -220,12 +226,16 @@ namespace WPEFramework {
         }
 		IARM_Result_t DisplaySettings::ResolutionPreChange(void *arg)
 		{
-		    MYLOG("%s\n", __PRETTY_FUNCTION__);
+            MYTRACE();
+            if(DisplaySettings::_instance)
+            {
+                DisplaySettings::_instance->resolutionPreChange();		
+            }
     		return IARM_RESULT_SUCCESS;
 		}
 		IARM_Result_t DisplaySettings::ResolutionPostChange(void *arg)
 		{
-		    MYLOG("%s\n", __PRETTY_FUNCTION__);		
+            MYTRACE();		
             int dw = 1280;
             int dh = 720;
             IARM_Bus_CommonAPI_ResChange_Param_t *eventData = (IARM_Bus_CommonAPI_ResChange_Param_t *)arg;
@@ -239,7 +249,7 @@ namespace WPEFramework {
         }
         void DisplaySettings::DisplResolutionHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len)
         {
-   		    MYLOG("%s\n", __PRETTY_FUNCTION__);
+            MYTRACE();        
             //TODO/FIXME Receiver has this whole think guarded by #ifndef HEADLESS_GW
             if (strcmp(owner,IARM_BUS_DSMGR_NAME) == 0)
             {
@@ -300,6 +310,7 @@ namespace WPEFramework {
         }
         void DisplaySettings::dsHdmiEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len)
         {
+            MYTRACE();        
             switch (eventId)
             {
             case IARM_BUS_DSMGR_EVENT_HDMI_HOTPLUG : 
@@ -348,6 +359,7 @@ namespace WPEFramework {
             }) != s1.end())
         uint32_t DisplaySettings::getQuirks(const Params& parameters, JStringArray& response)
         {
+            MYTRACE();
             //Note: you have to do str = "foo" because only the =operator sets its internal IsSet bit
             Core::JSON::String str;
             str = "XRE-7389";
@@ -362,28 +374,10 @@ namespace WPEFramework {
         }
         uint32_t DisplaySettings::getConnectedVideoDisplays(const Params& parameters, JStringArray& response)
         {
+            MYTRACE();
             vector<string> connectedDisplays;
+            getConnectedVideoDisplaysHelper(connectedDisplays);
 
-            device::List<device::VideoOutputPort> vPorts = device::Host::getInstance().getVideoOutputPorts();
-            for (size_t i = 0; i < vPorts.size(); i++)
-            {
-                device::VideoOutputPort &vPort = vPorts.at(i);
-                if (vPort.isDisplayConnected())
-                {
-                    string displayName = vPort.getName();
-                    if (strncasecmp(displayName.c_str(), "hdmi", 4)==0)
-                    {
-                        connectedDisplays.clear();
-                        connectedDisplays.emplace_back(displayName);
-                        break;
-                    }
-                    else if (!CONTAINS(connectedDisplays, displayName))
-                    {
-                        connectedDisplays.emplace_back(displayName);
-                    }
-                }
-            }
-            
             for(auto& cd : connectedDisplays)
             {
                 Core::JSON::String str;
@@ -395,6 +389,7 @@ namespace WPEFramework {
         }
         uint32_t DisplaySettings::getConnectedAudioPorts(const Params& parameters, JStringArray& response)
         {
+            MYTRACE();
             vector<string> connectedAudioPorts;
             
             device::List<device::AudioOutputPort> aPorts = device::Host::getInstance().getAudioOutputPorts();
@@ -421,6 +416,7 @@ namespace WPEFramework {
         }
         uint32_t DisplaySettings::getSupportedResolutions(const Params& parameters, JStringArray& response)
         {
+            MYTRACE();
             string videoDisplay = parameters.videoDisplay.Value();
             vector<string> supportedResolutions;
             device::VideoOutputPort &vPort = device::Host::getInstance().getVideoOutputPort(videoDisplay);
@@ -443,6 +439,7 @@ namespace WPEFramework {
         }
         uint32_t DisplaySettings::getSupportedTvResolutions(const Params& parameters, JStringArray& response)
         {
+            MYTRACE();
             string videoDisplay = parameters.videoDisplay.Value();
             vector<string> supportedResolutions;
             int tvResolutions = 0;
@@ -469,6 +466,7 @@ namespace WPEFramework {
         }
         uint32_t DisplaySettings::getSupportedAudioPorts(const Params& parameters, JStringArray& response)
         {
+            MYTRACE();
             vector<string> supportedAudioPorts;
             device::List<device::AudioOutputPort> aPorts = device::Host::getInstance().getAudioOutputPorts();
             for (size_t i = 0; i < aPorts.size(); i++)
@@ -491,10 +489,12 @@ namespace WPEFramework {
         }
         int DisplaySettings::getApiVersionNumber()
         {
+            MYTRACE();
             return m_apiVersionNumber;
         }
         void DisplaySettings::setApiVersionNumber(unsigned int apiVersionNumber)
         {
+            MYTRACE();
             if (apiVersionNumber <= 4)
             {
                 //try { //FIXME/TODO WPE doesn't support exceptions
@@ -535,6 +535,7 @@ namespace WPEFramework {
         }                                                    
         uint32_t DisplaySettings::getSupportedAudioModes(const Params& parameters, JStringArray& response)
         {
+            MYTRACE();
             string audioPort = parameters.audioPort.Value();
             vector<string> supportedAudioModes;
             bool HAL_hasSurround = false;
@@ -613,6 +614,7 @@ namespace WPEFramework {
         }
         uint32_t DisplaySettings::getZoomSetting(const Params& parameters, JString& response)
         {
+            MYTRACE();
             string zoomSetting = "unknown";
             // TODO: why is this always the first one in the list
             device::VideoDevice &decoder = device::Host::getInstance().getVideoDevices().at(0);
@@ -625,7 +627,8 @@ namespace WPEFramework {
         }
         uint32_t DisplaySettings::setZoomSetting(const Params& parameters, JString& response)
         {
-            string zoomSetting = parameters.zoomLevel.Value();
+            MYTRACE();
+            string zoomSetting = parameters.zoomSetting.Value();
 #ifdef USE_IARM //FIXME/TODO - when do we use this define
             zoomSetting = svc2iarm(zoomSetting);
 #endif
@@ -636,6 +639,7 @@ namespace WPEFramework {
         }
         uint32_t DisplaySettings::getCurrentResolution(const Params& parameters, JString& response)
         {
+            MYTRACE();
             string videoDisplay = parameters.videoDisplay.Value();
             device::VideoOutputPort &vPort = device::Host::getInstance().getVideoOutputPort(videoDisplay);
             response = vPort.getResolution().getName();//TODO/FIXME - should this be put into a json variable like response = "{\"resolution\":\""+vPort.getResolution().getName()+"\"}"
@@ -643,6 +647,7 @@ namespace WPEFramework {
         }
         uint32_t DisplaySettings::setCurrentResolution(const Params& parameters, JString& response)
         {
+            MYTRACE();
             string videoDisplay = parameters.videoDisplay.Value();
             string resolution = parameters.resolution.Value();
             device::VideoOutputPort &vPort = device::Host::getInstance().getVideoOutputPort(videoDisplay);
@@ -652,6 +657,7 @@ namespace WPEFramework {
         }
         uint32_t DisplaySettings::getSoundMode(const Params& parameters, JString& response)
         {
+            MYTRACE();
             string videoDisplay = parameters.videoDisplay.Value();
             bool validPortName = true;
 
@@ -826,6 +832,7 @@ namespace WPEFramework {
         }
         uint32_t DisplaySettings::setSoundMode(const Params& parameters, JString& response)
         {
+            MYTRACE();
             string videoDisplay = parameters.videoDisplay.Value();
             string soundMode = parameters.soundMode.Value();
             device::AudioStereoMode mode = device::AudioStereoMode::kStereo;  //default to stereo
@@ -980,6 +987,7 @@ namespace WPEFramework {
         }
         uint32_t DisplaySettings::readEDID(const Params& parameters, JString& response)
         {
+            MYTRACE();
             //FIXME/TODO - see remarks in readHostEDID
             string edid;
             device::VideoOutputPort vPort = device::Host::getInstance().getVideoOutputPort("HDMI0");
@@ -999,6 +1007,7 @@ namespace WPEFramework {
         }
         uint32_t DisplaySettings::readHostEDID(const Params& parameters, JString& response)
         {
+            MYTRACE();
             //FIXME/TODO this convertion from std::vector<unsigned char> to json base64 looks a bit sketchy -- need to ensure this is correct
             //WPE has these methods to base64 to string and string to base64;
             //void EXTERNAL ToString(const uint8_t object[], const uint16_t length, const bool padding, string& result);
@@ -1019,6 +1028,7 @@ namespace WPEFramework {
         }
         uint32_t DisplaySettings::getActiveInput(const Params& parameters, JBool& response)
         {
+            MYTRACE();
             string videoDisplay = parameters.videoDisplay.Value();
             device::VideoOutputPort &vPort = device::Host::getInstance().getVideoOutputPort(videoDisplay);
             response = vPort.isDisplayConnected() && vPort.isActive();
@@ -1026,40 +1036,138 @@ namespace WPEFramework {
         }
         //End methods
         //Begin events
-        void DisplaySettings::connectedVideoDisplaysUpdated(int hdmiHotPlugEvent)
+        void DisplaySettings::resolutionPreChange()
         {
-            Params params;
-            params.hdmiHotPlugEvent = hdmiHotPlugEvent;
-            string result;
-            params.ToString(result);            
-            Notify(_T("connectedVideoDisplaysUpdated"), result);
+            MYTRACE();
+            Notify(_T("resolutionChanged"), string());
         }
-        void DisplaySettings::resolutionChanged(int width, int height) {
-            Params params;
-            params.width = width;
-            params.height = height;
-            string result;
-            params.ToString(result);
-            Notify(_T("resolutionChanged"), result);
-        }
-        void DisplaySettings::zoomSettingUpdated(const string& zoomLevel)
+        void DisplaySettings::resolutionChanged(int width, int height)
         {
+            MYTRACE();
+            vector<string> connectedDisplays;
+            getConnectedVideoDisplaysHelper(connectedDisplays);
+        
+            string firstDisplay = "";
+            string firstResolution = "";
+            bool firstResolutionSet = false;
+            for (int i = 0; i < (int)connectedDisplays.size(); i++)
+            {
+                string resolution;
+                string display = connectedDisplays.at(i);
+
+                //try/catch was around the following line
+                resolution = device::Host::getInstance().getVideoOutputPort(display).getResolution().getName();
+
+                if (!resolution.empty())
+                {
+                    if (STRING_CONTAINS(display,string("HDMI")))
+                    {
+                        // only report first HDMI connected device is HDMI is connected
+                        
+                        Params params;
+                        params.width = width;
+                        params.height = height;
+                        params.videoDisplayType = display;
+                        params.resolution = resolution;
+                        string result;
+                        params.ToString(result);
+                        Notify(_T("resolutionChanged"), result);                        
+                        return;
+                    }
+                    else if (!firstResolutionSet)
+                    {
+                        firstDisplay = display;
+                        firstResolution = resolution;
+                        firstResolutionSet = true;
+                    }
+                }
+            }
+            if (firstResolutionSet)
+            {
+                //if HDMI is not connected then notify the server of first connected device
+                Params params;
+                params.width = width;
+                params.height = height;
+                params.videoDisplayType = firstDisplay;
+                params.resolution = firstResolution;
+                string result;
+                params.ToString(result);
+                Notify(_T("resolutionChanged"), result);                 
+            }
+        }
+        void DisplaySettings::zoomSettingUpdated(const string& zoomSetting)
+        {
+            MYTRACE();
             Params params;
-            params.zoomLevel = zoomLevel;
+            params.zoomSetting = zoomSetting;
+            params.videoDisplayType = "all";
             string result;
             params.ToString(result);
             Notify(_T("zoomSettingUpdated"), result);
         }
         void DisplaySettings::activeInputChanged(bool activeInput)
         {
+            MYTRACE();
             Params params;
             params.activeInput = activeInput;
             string result;
             params.ToString(result);
             Notify(_T("activeInputChanged"), result);
         }
+        void DisplaySettings::connectedVideoDisplaysUpdated(int hdmiHotPlugEvent)
+        {
+            MYTRACE();
+            static int previousStatus = HDMI_HOT_PLUG_EVENT_CONNECTED; 
+            static int firstTime = 1;
+
+            if (firstTime || previousStatus != hdmiHotPlugEvent)
+            {
+                firstTime = 0;
+                JStringArray connectedDisplays;
+                if (HDMI_HOT_PLUG_EVENT_CONNECTED == hdmiHotPlugEvent)
+                {
+                    Core::JSON::String display;
+                    display = "HDMI0";
+                    connectedDisplays.Add(display);
+                }
+                else
+                {
+                    /* notify Empty list on HDMI-output-disconnect hotplug */
+                }
+
+                Params params;
+                params.connectedDisplays = connectedDisplays;
+                string result;
+                params.ToString(result);            
+                Notify(_T("connectedVideoDisplaysUpdated"), result);
+            }
+            previousStatus = hdmiHotPlugEvent;
+        }
         //End events
         
+        void DisplaySettings::getConnectedVideoDisplaysHelper(std::vector<string>& connectedDisplays)
+        {
+            MYTRACE();
+            device::List<device::VideoOutputPort> vPorts = device::Host::getInstance().getVideoOutputPorts();
+            for (size_t i = 0; i < vPorts.size(); i++)
+            {
+                device::VideoOutputPort &vPort = vPorts.at(i);
+                if (vPort.isDisplayConnected())
+                {
+                    string displayName = vPort.getName();
+                    if (strncasecmp(displayName.c_str(), "hdmi", 4)==0)
+                    {
+                        connectedDisplays.clear();
+                        connectedDisplays.emplace_back(displayName);
+                        break;
+                    }
+                    else if (!CONTAINS(connectedDisplays, displayName))
+                    {
+                        connectedDisplays.emplace_back(displayName);
+                    }
+                }
+            }
+        }
 	} // namespace Plugin
 	
 } // namespace WPEFramework

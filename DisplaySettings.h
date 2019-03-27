@@ -25,6 +25,10 @@ namespace WPEFramework {
 		// will receive a JSONRPC message as a notification, in case this method is called.
         class DisplaySettings : public PluginHost::IPlugin, public PluginHost::JSONRPC {
         private:
+            typedef Core::JSON::String JString;
+            typedef Core::JSON::ArrayType<JString> JStringArray;
+            typedef Core::JSON::Boolean JBool;
+
             // We do not allow this plugin to be copied !!
             DisplaySettings(const DisplaySettings&) = delete;
             DisplaySettings& operator=(const DisplaySettings&) = delete;
@@ -33,66 +37,73 @@ namespace WPEFramework {
             public:
                 Params() : Core::JSON::Container()
                 {
+                    Add("quirks", &quirks);
                     Add("videoDisplay", &videoDisplay);
+                    Add("videoDisplayType", &videoDisplayType);
                     Add("resolution", &resolution);
-                    Add("zoomLevel", &zoomLevel);
+                    Add("zoomSetting", &zoomSetting);
                     Add("soundMode", &soundMode);
                     Add("audioPort", &audioPort);
                     Add("width", &width);
                     Add("height", &height);
-                    Add("hdmiHotPlugEvent", &hdmiHotPlugEvent);
+                    Add("connectedDisplays", &connectedDisplays);
                     Add("activeInput", &activeInput);                    
                 }
                 Params(const Params& copy)
                 {
+                    Add("quirks", &quirks);
                     Add("videoDisplay", &videoDisplay);
+                    Add("videoDisplayType", &videoDisplayType);
                     Add("resolution", &resolution);
-                    Add("zoomLevel", &zoomLevel);
+                    Add("zoomSetting", &zoomSetting);
                     Add("soundMode", &soundMode);
                     Add("audioPort", &audioPort);
                     Add("width", &width);
                     Add("height", &height);
-                    Add("hdmiHotPlugEvent", &hdmiHotPlugEvent);
-                    Add("activeInput", &activeInput);
+                    Add("connectedDisplays", &connectedDisplays);
+                    Add("activeInput", &activeInput);                    
+                    quirks = copy.quirks;
                     videoDisplay = copy.videoDisplay;
+                    videoDisplayType = copy.videoDisplayType;
                     resolution = copy.resolution;
-                    zoomLevel = copy.zoomLevel;
+                    zoomSetting = copy.zoomSetting;
                     soundMode = copy.soundMode;
                     audioPort = copy.audioPort;
                     width = copy.width;
                     height = copy.height;
-                    hdmiHotPlugEvent = copy.hdmiHotPlugEvent;
+                    connectedDisplays = copy.connectedDisplays;
                     activeInput = copy.activeInput;
                 }
 
                 Params& operator=(const Params& copy)
                 {
+                    quirks = copy.quirks;
                     videoDisplay = copy.videoDisplay;
+                    videoDisplayType = copy.videoDisplayType;
                     resolution = copy.resolution;
-                    zoomLevel = copy.zoomLevel;
+                    zoomSetting = copy.zoomSetting;
                     soundMode = copy.soundMode;
                     audioPort = copy.audioPort;
                     width = copy.width;
                     height = copy.height;
-                    hdmiHotPlugEvent = copy.hdmiHotPlugEvent;
+                    connectedDisplays = copy.connectedDisplays;
                     activeInput = copy.activeInput;
                     return *this;
                 }
             public:
+                Core::JSON::ArrayType<Core::JSON::String> quirks;
                 Core::JSON::String videoDisplay;
+                Core::JSON::String videoDisplayType;                
                 Core::JSON::String resolution;
-                Core::JSON::String zoomLevel;
+                Core::JSON::String zoomSetting;
                 Core::JSON::String soundMode;
                 Core::JSON::String audioPort;
                 Core::JSON::DecSInt32 width;
                 Core::JSON::DecSInt32 height;
-                Core::JSON::DecSInt32 hdmiHotPlugEvent;
+                Core::JSON::ArrayType<Core::JSON::String> connectedDisplays;
                 Core::JSON::Boolean activeInput;
             };
 
-            typedef Core::JSON::String JString;
-            typedef Core::JSON::ArrayType<JString> JStringArray;
-            typedef Core::JSON::Boolean JBool;
             //Begin methods
             uint32_t getQuirks(const Params& parameters, JStringArray& response);//FIXME/TODO - this was on the Service base class and implemented in DisplaySettings so i guess its needed
             uint32_t getConnectedVideoDisplays(const Params& parameters, JStringArray& response);
@@ -112,10 +123,11 @@ namespace WPEFramework {
             uint32_t getActiveInput(const Params& parameters, JBool& response);
             //End methods
             //Begin events
-            void connectedVideoDisplaysUpdated(int hdmiHotPlugEvent);
+            void resolutionPreChange();
             void resolutionChanged(int width, int height);
-            void zoomSettingUpdated(const string& zoomLevel);
+            void zoomSettingUpdated(const string& zoomSetting);
             void activeInputChanged(bool activeInput);
+            void connectedVideoDisplaysUpdated(int hdmiHotPlugEvent);
             //End events
         public:
             DisplaySettings();
@@ -141,6 +153,7 @@ namespace WPEFramework {
             //TODO/FIXME -- these are carried over from ServiceManager DisplaySettings - we need to munge this around to support the Thunder plugin version number
             int getApiVersionNumber();
             void setApiVersionNumber(unsigned int apiVersionNumber);
+            void getConnectedVideoDisplaysHelper(std::vector<string>& connectedDisplays);
         public:
             static DisplaySettings* _instance;
         private:
