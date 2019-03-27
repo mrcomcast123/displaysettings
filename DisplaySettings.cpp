@@ -94,7 +94,6 @@ namespace
         return name;
     }
 }
-#endif
 
 namespace WPEFramework {
 
