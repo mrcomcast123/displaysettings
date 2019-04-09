@@ -8,7 +8,7 @@ or locally (my example)
 cd displaysettings 
 mkdir build
 cd build
-cmake -DBUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=/home/mark/rdk/wpe/install ..
+cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=/home/mark/rdk/wpe/install ..
 make
 make install
 

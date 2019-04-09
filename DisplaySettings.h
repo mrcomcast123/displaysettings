@@ -30,95 +30,31 @@ namespace WPEFramework {
             DisplaySettings(const DisplaySettings&) = delete;
             DisplaySettings& operator=(const DisplaySettings&) = delete;
 
-            class Params : public Core::JSON::Container {
-            public:
-                Params() : Core::JSON::Container()
-                {
-                    Add("quirks", &quirks);
-                    Add("videoDisplay", &videoDisplay);
-                    Add("videoDisplayType", &videoDisplayType);
-                    Add("resolution", &resolution);
-                    Add("zoomSetting", &zoomSetting);
-                    Add("soundMode", &soundMode);
-                    Add("audioPort", &audioPort);
-                    Add("width", &width);
-                    Add("height", &height);
-                    Add("connectedDisplays", &connectedDisplays);
-                    Add("activeInput", &activeInput);                    
-                }
-                Params(const Params& copy)
-                {
-                    Add("quirks", &quirks);
-                    Add("videoDisplay", &videoDisplay);
-                    Add("videoDisplayType", &videoDisplayType);
-                    Add("resolution", &resolution);
-                    Add("zoomSetting", &zoomSetting);
-                    Add("soundMode", &soundMode);
-                    Add("audioPort", &audioPort);
-                    Add("width", &width);
-                    Add("height", &height);
-                    Add("connectedDisplays", &connectedDisplays);
-                    Add("activeInput", &activeInput);                    
-                    quirks = copy.quirks;
-                    videoDisplay = copy.videoDisplay;
-                    videoDisplayType = copy.videoDisplayType;
-                    resolution = copy.resolution;
-                    zoomSetting = copy.zoomSetting;
-                    soundMode = copy.soundMode;
-                    audioPort = copy.audioPort;
-                    width = copy.width;
-                    height = copy.height;
-                    connectedDisplays = copy.connectedDisplays;
-                    activeInput = copy.activeInput;
-                }
-
-                Params& operator=(const Params& copy)
-                {
-                    quirks = copy.quirks;
-                    videoDisplay = copy.videoDisplay;
-                    videoDisplayType = copy.videoDisplayType;
-                    resolution = copy.resolution;
-                    zoomSetting = copy.zoomSetting;
-                    soundMode = copy.soundMode;
-                    audioPort = copy.audioPort;
-                    width = copy.width;
-                    height = copy.height;
-                    connectedDisplays = copy.connectedDisplays;
-                    activeInput = copy.activeInput;
-                    return *this;
-                }
-            public:
-                Core::JSON::ArrayType<Core::JSON::String> quirks;
-                Core::JSON::String videoDisplay;
-                Core::JSON::String videoDisplayType;                
-                Core::JSON::String resolution;
-                Core::JSON::String zoomSetting;
-                Core::JSON::String soundMode;
-                Core::JSON::String audioPort;
-                Core::JSON::DecSInt32 width;
-                Core::JSON::DecSInt32 height;
-                Core::JSON::ArrayType<Core::JSON::String> connectedDisplays;
-                Core::JSON::Boolean activeInput;
-            };
-
             //Begin methods
-            uint32_t getQuirks(const Params& parameters, JStringArray& response);//FIXME/TODO - this was on the Service base class and implemented in DisplaySettings so i guess its needed
-            uint32_t getConnectedVideoDisplays(const Params& parameters, JStringArray& response);
-            uint32_t getConnectedAudioPorts(const Params& parameters, JStringArray& response);
-            uint32_t getSupportedResolutions(const Params& parameters, JStringArray& response);
-            uint32_t getSupportedTvResolutions(const Params& parameters, JStringArray& response);
-            uint32_t getSupportedAudioPorts(const Params& parameters, JStringArray& response);
-            uint32_t getSupportedAudioModes(const Params& parameters, JStringArray& response);
-            uint32_t getZoomSetting(const Params& parameters, JString& response);
-            uint32_t setZoomSetting(const Params& parameters, JString& response);
-            uint32_t getCurrentResolution(const Params& parameters, JString& response);
-            uint32_t setCurrentResolution(const Params& parameters, JString& response);
-            uint32_t getSoundMode(const Params& parameters, JString& response);
-            uint32_t setSoundMode(const Params& parameters, JString& response);
-            uint32_t readEDID(const Params& parameters, JString& response);
-            uint32_t readHostEDID(const Params& parameters, JString& response);
-            uint32_t getActiveInput(const Params& parameters, JBool& response);
+            uint32_t getQuirks(const JsonObject& parameters, JsonObject& response);
+            uint32_t getConnectedVideoDisplays(const JsonObject& parameters, JsonObject& response);
+            uint32_t getConnectedAudioPorts(const JsonObject& parameters, JsonObject& response);
+            uint32_t getSupportedResolutions(const JsonObject& parameters, JsonObject& response);
+            uint32_t getSupportedVideoDisplays(const JsonObject& parameters, JsonObject& response);            
+            uint32_t getSupportedTvResolutions(const JsonObject& parameters, JsonObject& response);
+            uint32_t getSupportedSettopResolutions(const JsonObject& parameters, JsonObject& response);            
+            uint32_t getSupportedAudioPorts(const JsonObject& parameters, JsonObject& response);
+            uint32_t getSupportedAudioModes(const JsonObject& parameters, JsonObject& response);
+            uint32_t getZoomSetting(const JsonObject& parameters, JsonObject& response);
+            uint32_t setZoomSetting(const JsonObject& parameters, JsonObject& response);
+            uint32_t getCurrentResolution(const JsonObject& parameters, JsonObject& response);
+            uint32_t setCurrentResolution(const JsonObject& parameters, JsonObject& response);
+            uint32_t getSoundMode(const JsonObject& parameters, JsonObject& response);
+            uint32_t setSoundMode(const JsonObject& parameters, JsonObject& response);
+            uint32_t readEDID(const JsonObject& parameters, JsonObject& response);
+            uint32_t readHostEDID(const JsonObject& parameters, JsonObject& response);
+            uint32_t getActiveInput(const JsonObject& parameters, JsonObject& response);
+            uint32_t getTvHDRSupport(const JsonObject& parameters, JsonObject& response);
+            uint32_t getSettopHDRSupport(const JsonObject& parameters, JsonObject& response);
+            uint32_t setVideoPortStandbyStatus(const JsonObject& parameters, JsonObject& response);
+            uint32_t getVideoPortStandbyStatus(const JsonObject& parameters, JsonObject& response);
             //End methods
+
             //Begin events
             void resolutionPreChange();
             void resolutionChanged(int width, int height);
@@ -145,14 +81,14 @@ namespace WPEFramework {
 		    static IARM_Result_t ResolutionPostChange(void *arg);
             static void DisplResolutionHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
             static void dsHdmiEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
-            //TODO/FIXME -- these are carried over from ServiceManager DisplaySettings - we need to munge this around to support the Thunder plugin version number
-            int getApiVersionNumber();
-            void setApiVersionNumber(unsigned int apiVersionNumber);
             void getConnectedVideoDisplaysHelper(std::vector<string>& connectedDisplays);
+            //TODO/FIXME -- these are carried over from ServiceManager DisplaySettings - we need to munge this around to support the Thunder plugin version number
+            uint32_t getApiVersionNumber();
+            void setApiVersionNumber(uint32_t apiVersionNumber);
         public:
             static DisplaySettings* _instance;
         private:
-            unsigned int m_apiVersionNumber;
+            uint32_t m_apiVersionNumber;
         };
 	} // namespace Plugin
 } // namespace WPEFramework
