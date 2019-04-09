@@ -115,55 +115,55 @@ namespace WPEFramework {
     		
             MYTRACE();
             DisplaySettings::_instance = this;
-   			Register<JsonObject, JsonObject>(_T("getQuirks"), &DisplaySettings::getQuirks, this);
-			Register<JsonObject, JsonObject>(_T("getConnectedVideoDisplays"), &DisplaySettings::getConnectedVideoDisplays, this);
-			Register<JsonObject, JsonObject>(_T("getConnectedAudioPorts"), &DisplaySettings::getConnectedAudioPorts, this);
-			Register<JsonObject, JsonObject>(_T("getSupportedResolutions"), &DisplaySettings::getSupportedResolutions, this);
-			Register<JsonObject, JsonObject>(_T("getSupportedVideoDisplays"), &DisplaySettings::getSupportedVideoDisplays, this);			
-			Register<JsonObject, JsonObject>(_T("getSupportedTvResolutions"), &DisplaySettings::getSupportedTvResolutions, this);
-			Register<JsonObject, JsonObject>(_T("getSupportedSettopResolutions"), &DisplaySettings::getSupportedSettopResolutions, this);			
-			Register<JsonObject, JsonObject>(_T("getSupportedAudioPorts"), &DisplaySettings::getSupportedAudioPorts, this);
-			Register<JsonObject, JsonObject>(_T("getSupportedAudioModes"), &DisplaySettings::getSupportedAudioModes, this);
-			Register<JsonObject, JsonObject>(_T("getZoomSetting"), &DisplaySettings::getZoomSetting, this);
-			Register<JsonObject, JsonObject>(_T("setZoomSetting"), &DisplaySettings::setZoomSetting, this);
-			Register<JsonObject, JsonObject>(_T("getCurrentResolution"), &DisplaySettings::getCurrentResolution, this);
-			Register<JsonObject, JsonObject>(_T("setCurrentResolution"), &DisplaySettings::setCurrentResolution, this);
-			Register<JsonObject, JsonObject>(_T("getSoundMode"), &DisplaySettings::getSoundMode, this);
-			Register<JsonObject, JsonObject>(_T("setSoundMode"), &DisplaySettings::setSoundMode, this);
-			Register<JsonObject, JsonObject>(_T("readEDID"), &DisplaySettings::readEDID, this);
-			Register<JsonObject, JsonObject>(_T("readHostEDID"), &DisplaySettings::readHostEDID, this);
-			Register<JsonObject, JsonObject>(_T("getActiveInput"), &DisplaySettings::getActiveInput, this);
-			Register<JsonObject, JsonObject>(_T("getTvHDRSupport"), &DisplaySettings::getTvHDRSupport, this);
-			Register<JsonObject, JsonObject>(_T("getSettopHDRSupport"), &DisplaySettings::getSettopHDRSupport, this);
-			Register<JsonObject, JsonObject>(_T("setVideoPortStandbyStatus"), &DisplaySettings::setVideoPortStandbyStatus, this);
-			Register<JsonObject, JsonObject>(_T("getVideoPortStandbyStatus"), &DisplaySettings::getVideoPortStandbyStatus, this);
+   			Register("getQuirks", &DisplaySettings::getQuirks, this);
+			Register("getConnectedVideoDisplays", &DisplaySettings::getConnectedVideoDisplays, this);
+			Register("getConnectedAudioPorts", &DisplaySettings::getConnectedAudioPorts, this);
+			Register("getSupportedResolutions", &DisplaySettings::getSupportedResolutions, this);
+			Register("getSupportedVideoDisplays", &DisplaySettings::getSupportedVideoDisplays, this);			
+			Register("getSupportedTvResolutions", &DisplaySettings::getSupportedTvResolutions, this);
+			Register("getSupportedSettopResolutions", &DisplaySettings::getSupportedSettopResolutions, this);			
+			Register("getSupportedAudioPorts", &DisplaySettings::getSupportedAudioPorts, this);
+			Register("getSupportedAudioModes", &DisplaySettings::getSupportedAudioModes, this);
+			Register("getZoomSetting", &DisplaySettings::getZoomSetting, this);
+			Register("setZoomSetting", &DisplaySettings::setZoomSetting, this);
+			Register("getCurrentResolution", &DisplaySettings::getCurrentResolution, this);
+			Register("setCurrentResolution", &DisplaySettings::setCurrentResolution, this);
+			Register("getSoundMode", &DisplaySettings::getSoundMode, this);
+			Register("setSoundMode", &DisplaySettings::setSoundMode, this);
+			Register("readEDID", &DisplaySettings::readEDID, this);
+			Register("readHostEDID", &DisplaySettings::readHostEDID, this);
+			Register("getActiveInput", &DisplaySettings::getActiveInput, this);
+			Register("getTvHDRSupport", &DisplaySettings::getTvHDRSupport, this);
+			Register("getSettopHDRSupport", &DisplaySettings::getSettopHDRSupport, this);
+			Register("setVideoPortStandbyStatus", &DisplaySettings::setVideoPortStandbyStatus, this);
+			Register("getVideoPortStandbyStatus", &DisplaySettings::getVideoPortStandbyStatus, this);
 		}
 		DisplaySettings::~DisplaySettings()
 		{
             MYTRACE();
             DisplaySettings::_instance = nullptr;
-			Unregister(_T("getQuirks"));            
-			Unregister(_T("getConnectedVideoDisplays"));
-			Unregister(_T("getConnectedAudioPorts"));
-			Unregister(_T("getSupportedResolutions"));
-			Unregister(_T("getSupportedVideoDisplays"));
-			Unregister(_T("getSupportedTvResolutions"));
-			Unregister(_T("getSupportedSettopResolutions"));			
-			Unregister(_T("getSupportedAudioPorts"));
-			Unregister(_T("getSupportedAudioModes"));
-			Unregister(_T("getZoomSetting"));
-			Unregister(_T("setZoomSetting"));
-			Unregister(_T("getCurrentResolution"));
-			Unregister(_T("setCurrentResolution"));
-			Unregister(_T("getSoundMode"));
-			Unregister(_T("setSoundMode"));
-			Unregister(_T("readEDID"));
-			Unregister(_T("readHostEDID"));
-			Unregister(_T("getActiveInput"));
-			Unregister(_T("getTvHDRSupport"));
-			Unregister(_T("getSettopHDRSupport"));
-			Unregister(_T("setVideoPortStandbyStatus"));
-			Unregister(_T("getVideoPortStandbyStatus"));
+			Unregister("getQuirks");
+			Unregister("getConnectedVideoDisplays");
+			Unregister("getConnectedAudioPorts");
+			Unregister("getSupportedResolutions");
+			Unregister("getSupportedVideoDisplays");
+			Unregister("getSupportedTvResolutions");
+			Unregister("getSupportedSettopResolutions");			
+			Unregister("getSupportedAudioPorts");
+			Unregister("getSupportedAudioModes");
+			Unregister("getZoomSetting");
+			Unregister("setZoomSetting");
+			Unregister("getCurrentResolution");
+			Unregister("setCurrentResolution");
+			Unregister("getSoundMode");
+			Unregister("setSoundMode");
+			Unregister("readEDID");
+			Unregister("readHostEDID");
+			Unregister("getActiveInput");
+			Unregister("getTvHDRSupport");
+			Unregister("getSettopHDRSupport");
+			Unregister("setVideoPortStandbyStatus");
+			Unregister("getVideoPortStandbyStatus");
 		}
 		const string DisplaySettings::Initialize(PluginHost::IShell* /* service */)
 		{
@@ -1314,7 +1314,7 @@ namespace WPEFramework {
         void DisplaySettings::resolutionPreChange()
         {
             MYTRACE();
-            Notify(_T("resolutionChanged"), string());
+            Notify("resolutionChanged", string());
         }
         void DisplaySettings::resolutionChanged(int width, int height)
         {
